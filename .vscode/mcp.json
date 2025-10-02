@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "vectorworks-docs": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\muromachi\\Documents\\works\\flowworks\\vectorworks-mcp\\vectorworks-mcp\\mcp-bridge.js"
+      ]
+    }
+  }
+}
