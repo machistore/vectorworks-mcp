@@ -1,6 +1,12 @@
 import vs
 
-def get_view_settings():
+
+def collect_view_settings():
+    """現在のビュー設定項目を収集してリストで返す
+    
+    Returns:
+        list: 設定項目の文字列リスト
+    """
     info_lines = []
     info_lines.append("=== Vectorworks View Settings ===\n")
     
@@ -88,6 +94,15 @@ def get_view_settings():
     except Exception as e:
         info_lines.append(f"Working Plane: Error ({e})")
     
+    return info_lines
+
+
+def display_settings_dialog(info_lines):
+    """設定項目リストをダイアログで表示する
+    
+    Args:
+        info_lines (list): 設定項目の文字列リスト
+    """
     # Display in dialog
     message = "\n".join(info_lines)
     
@@ -118,11 +133,17 @@ def get_view_settings():
             title = f"Vectorworks Settings {i+1}/{len(parts)}\n\n"
             vs.AlrtDialog(title + part)
 
+
 def main():
+    """メイン実行関数"""
     try:
-        get_view_settings()
+        # データを収集
+        settings_data = collect_view_settings()
+        # ダイアログで表示
+        display_settings_dialog(settings_data)
     except Exception as e:
         vs.AlrtDialog(f"Error: {str(e)}")
+
 
 if __name__ == "__main__":
     main()
