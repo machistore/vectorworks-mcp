@@ -94,44 +94,96 @@ def collect_view_settings():
     except Exception as e:
         info_lines.append(f"Working Plane: Error ({e})")
     
+    # 全デザインレイヤー情報
+    info_lines.append("\n【全デザインレイヤー】")
+    try:
+        all_layers = get_all_design_layers()
+        if all_layers:
+            for layer_info in all_layers:
+                info_lines.append(f"  {layer_info}")
+        else:
+            info_lines.append("  デザインレイヤーなし")
+    except Exception as e:
+        info_lines.append(f"全レイヤー情報: 取得エラー ({e})")
+    
     return info_lines
 
 
+def get_all_design_layers():
+    """全てのデザインレイヤー名とその表示状態を取得する
+    
+    Returns:
+        list: [レイヤー名, 表示状態]のペアのリスト
+    """
+    layer_info_list = []
+    
+    try:
+        # 最初のレイヤーを取得
+        current_layer = vs.FLayer()
+        
+        while current_layer:
+            try:
+                # レイヤー名を取得
+                layer_name = vs.GetLName(current_layer)
+                
+                # レイヤーの表示状態を取得
+                layer_vis = vs.GetLVis(current_layer)
+                
+                # 表示状態を文字列に変換
+                vis_status_map = {
+                    0: "通常",      # Normal/Visible
+                    2: "グレー",    # Grayed
+                    -1: "非表示"    # Invisible
+                }
+                vis_status = vis_status_map.get(layer_vis, f"不明({layer_vis})")
+                
+                # [レイヤー名: 表示状態] の形式で追加
+                layer_info = f"{layer_name}: {vis_status}"
+                layer_info_list.append(layer_info)
+                
+            except Exception as e:
+                # 個別のレイヤー処理でエラーが発生した場合
+                layer_info_list.append(f"エラーレイヤー: 取得失敗 ({e})")
+            
+            # 次のレイヤーに移動
+            current_layer = vs.NextLayer(current_layer)
+            
+    except Exception as e:
+        layer_info_list.append(f"レイヤー取得エラー: {e}")
+    
+    return layer_info_list
+
+
 def display_settings_dialog(info_lines):
-    """設定項目リストをダイアログで表示する
+    """設定項目リストを2つのダイアログに分けて表示する
     
     Args:
         info_lines (list): 設定項目の文字列リスト
     """
-    # Display in dialog
-    message = "\n".join(info_lines)
+    # メイン設定情報と全デザインレイヤー情報を分離
+    main_settings = []
+    layer_settings = []
     
-    # Split message if too long
-    max_length = 2000
-    if len(message) <= max_length:
-        vs.AlrtDialog(message)
-    else:
-        # Split into parts
-        parts = []
-        current_part = []
-        current_length = 0
-        
-        for line in info_lines:
-            if current_length + len(line) + 1 > max_length:
-                parts.append("\n".join(current_part))
-                current_part = [line]
-                current_length = len(line)
-            else:
-                current_part.append(line)
-                current_length += len(line) + 1
-        
-        if current_part:
-            parts.append("\n".join(current_part))
-        
-        # Display each part
-        for i, part in enumerate(parts):
-            title = f"Vectorworks Settings {i+1}/{len(parts)}\n\n"
-            vs.AlrtDialog(title + part)
+    in_layer_section = False
+    
+    for line in info_lines:
+        if "【全デザインレイヤー】" in line:
+            in_layer_section = True
+            layer_settings.append(line)
+        elif in_layer_section:
+            layer_settings.append(line)
+        else:
+            main_settings.append(line)
+    
+    # 1回目: メイン設定情報を表示
+    if main_settings:
+        main_message = "\n".join(main_settings)
+        vs.AlrtDialog(main_message)
+    
+    # 2回目: 全デザインレイヤー情報を表示
+    if layer_settings:
+        layer_message = "\n".join(layer_settings)
+        vs.AlrtDialog(layer_message)
 
 
 def main():
